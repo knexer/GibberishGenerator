@@ -19,33 +19,22 @@ public class SingleFileProcessor {
 	 */
 	public static void main(String[] args)
 	{
-		//open the source file
-		BufferedReader source = null;
-		try {
-			source = new BufferedReader(new FileReader(args[0]));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
+		processSingleFile(args[0], args[1]);
+	}
+	
+	public static void processSingleFile(String inputFilename, String outputFilename)
+	{
+		Map<String, BigInteger> wordCounts = extractWordCounts(inputFilename);
 		
-		//extract the word counts
-		Map<String, BigInteger> wordCounts = null;
-		try {
-			wordCounts = PreProcessor.extractRawWordCountsFromGoogleBooksFile(source);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		//close the source file
-		try {
-			source.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
+		writeWordCounts(outputFilename, wordCounts);
+	}
+
+	private static void writeWordCounts(String outputFilename,
+			Map<String, BigInteger> wordCounts) {
 		//open target file
 		BufferedWriter target = null;
 		try {
-			target = new BufferedWriter(new FileWriter(args[1]));
+			target = new BufferedWriter(new FileWriter(outputFilename));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -66,5 +55,32 @@ public class SingleFileProcessor {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static Map<String, BigInteger> extractWordCounts(
+			String inputFilename) {
+		//open the source file
+		BufferedReader source = null;
+		try {
+			source = new BufferedReader(new FileReader(inputFilename));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		//extract the word counts
+		Map<String, BigInteger> wordCounts = null;
+		try {
+			wordCounts = PreProcessor.extractRawWordCountsFromGoogleBooksFile(source);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		//close the source file
+		try {
+			source.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return wordCounts;
 	}
 }
