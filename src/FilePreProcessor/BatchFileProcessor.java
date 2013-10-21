@@ -21,6 +21,8 @@ public class BatchFileProcessor {
 			
 			//process the file
 			SingleFileProcessor.processSingleFile(inputFile.getAbsolutePath(), outputDirectory.getAbsolutePath() + File.separator + destinationFilename);
+		
+			System.out.println("Finished generating " + destinationFilename);
 		}
 	}
 	
