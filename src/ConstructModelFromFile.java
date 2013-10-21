@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -11,29 +12,27 @@ import java.util.Random;
 
 public class ConstructModelFromFile {
 	
-	
+	/**
+	 * 
+	 * @param args
+	 * args[0] training data directory
+	 * args[1] n (size of history, an integer)
+	 * args[2] numWords (number of gibberish words to generate)
+	 */
 	public static void main(String[] args)
 	{
-		String filename = "w.txt";
-		int n = 3;
-		int numWords = 20;
+		File inputDirectory = new File(args[0]);
+		int n = Integer.parseInt(args[1]);
+		int numWords = Integer.parseInt(args[2]);
 		
-		String corpus = null;
+		//parse the input data files
+		HashMap<String, BigInteger> corpusMap = constructCorpusFromFiles(inputDirectory.listFiles());
 		
-		try{
-			corpus = readFile(filename, StandardCharsets.UTF_8);
-		}
-		catch(IOException e)
-		{
-			e.printStackTrace();
-			return;
-		}
-		
-		HashMap<String, BigInteger> corpusMap = constructCorpusFromString(corpus);
+		//construct the language model
 		NGramFactory factory = new NGramFactory(n, corpusMap);
 		MarkovNode<String> model = factory.constructModel();
-		model.toString();
 		
+		//generate gibberish with the language model
 		Random r = new Random();
 		for(int i = 0; i < numWords; i++)
 		{
@@ -54,12 +53,34 @@ public class ConstructModelFromFile {
 		}
 	}
 	
-	private static HashMap<String, BigInteger> constructCorpusFromString(String corpus)
+	private static HashMap<String, BigInteger> constructCorpusFromFiles(File[] files)
 	{
 		HashMap<String, BigInteger> ret = new HashMap<String, BigInteger>();
 		
+		for(File file : files)
+		{
+			String data = null;
+			
+			try
+			{
+				data = readFile(file.getAbsolutePath(), StandardCharsets.UTF_8);
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+				continue;
+			}
+			
+			augmentCorpusWithString(ret, data);
+		}
+		
+		return ret;
+	}
+	
+	private static HashMap<String, BigInteger> augmentCorpusWithString(HashMap<String, BigInteger> corpus, String augment)
+	{
 		//for each word in the corpus
-		String[] lines = corpus.split("\n");
+		String[] lines = augment.split("\n");
 		for(String line : lines)
 		{
 			//extract the word and count from the formatted line
@@ -67,16 +88,14 @@ public class ConstructModelFromFile {
 			String word = line.substring(0, tabLocation);
 			BigInteger count = new BigInteger(line.substring(tabLocation + 1));
 			
-			ret.put(word, count);
+			corpus.put(word, count);
 		}
 		
-		return ret;
+		return corpus;
 	}
 	
-	static String readFile(String path, Charset encoding) 
-			  throws IOException 
-			{
-			  byte[] encoded = Files.readAllBytes(Paths.get(path));
-			  return encoding.decode(ByteBuffer.wrap(encoded)).toString();
-			}
+	private static String readFile(String path, Charset encoding) throws IOException {
+		byte[] encoded = Files.readAllBytes(Paths.get(path));
+		return encoding.decode(ByteBuffer.wrap(encoded)).toString();
+	}
 }
